@@ -4,8 +4,10 @@ from matplotlib.transforms import Affine2D
 
 from .locator import TransformLocator
 from .formatter import TransformFormatter
+from .angle import Angle
 
 IDENTITY = Affine2D()
+
 
 class ParasiteAxes(Axes):
 
@@ -91,10 +93,18 @@ class HostAxes(Axes):
         self.other[name].set_frame_on(False)
 
     def set_xspacing(self, spacing):
+        if self.major_loc_x.coord_type == 'longitude':
+            spacing = Angle(spacing)
+        elif self.major_loc_x.coord_type == 'latitude':
+            spacing = Angle(spacing, latitude=True)
         self.major_loc_x.spacing = spacing
         self.twin.major_loc_x.spacing = spacing
 
     def set_yspacing(self, spacing):
+        if self.major_loc_y.coord_type == 'longitude':
+            spacing = Angle(spacing)
+        elif self.major_loc_y.coord_type == 'latitude':
+            spacing = Angle(spacing, latitude=True)
         self.major_loc_y.spacing = spacing
         self.twin.major_loc_y.spacing = spacing
 
