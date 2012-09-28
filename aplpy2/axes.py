@@ -9,13 +9,13 @@ IDENTITY = Affine2D()
 
 class ParasiteAxes(Axes):
 
-    def __init__(self, fig, rect, parent, transform=IDENTITY, xcoord_type='scalar', ycoord_type='scalar'):
+    def __init__(self, fig, rect, parent, transform=IDENTITY, xcoord_type='scalar', ycoord_type='scalar', adjustable='datalim'):
 
         self.fig = fig
         self.rect = rect
         self._parent = parent
 
-        Axes.__init__(self, fig, rect)
+        Axes.__init__(self, fig, rect, adjustable=adjustable)
 
         self.xaxis.set_ticks_position('top')
         self.yaxis.set_ticks_position('right')
@@ -50,13 +50,13 @@ class ParasiteAxes(Axes):
 
 class HostAxes(Axes):
 
-    def __init__(self, fig, rect, transform=IDENTITY, xcoord_type='scalar', ycoord_type='scalar', parent=None):
+    def __init__(self, fig, rect, transform=IDENTITY, xcoord_type='scalar', ycoord_type='scalar', adjustable='datalim', parent=None):
 
         self.fig = fig
         self.rect = rect
         self._parent = parent
 
-        Axes.__init__(self, fig, rect)
+        Axes.__init__(self, fig, rect, adjustable=adjustable)
 
         self.xaxis.set_ticks_position('bottom')
         self.yaxis.set_ticks_position('left')

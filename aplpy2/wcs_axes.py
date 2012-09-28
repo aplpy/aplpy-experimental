@@ -8,9 +8,9 @@ from .transforms.wcs import WcsPixel2WorldTransform
 
 class WCSAxes(HostAxes):
 
-    def __init__(self, fig, rect, input=None):
+    def __init__(self, fig, rect, input=None, adjustable='datalim'):
 
-        HostAxes.__init__(self, fig, rect)
+        HostAxes.__init__(self, fig, rect, adjustable=adjustable)
 
         self.set_input(input=input)
 
