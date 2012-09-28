@@ -1,17 +1,18 @@
 from matplotlib.axes import Axes
 from matplotlib.ticker import NullFormatter
+from matplotlib.transforms import Affine2D
 
 from .locator import TransformLocator
 from .formatter import TransformFormatter
 
+IDENTITY = Affine2D()
 
 class ParasiteAxes(Axes):
 
-    def __init__(self, fig, rect, parent, transform, xcoord_type='scalar', ycoord_type='scalar'):
+    def __init__(self, fig, rect, parent, transform=IDENTITY, xcoord_type='scalar', ycoord_type='scalar'):
 
         self.fig = fig
         self.rect = rect
-        self.transform = transform
         self._parent = parent
 
         Axes.__init__(self, fig, rect)
@@ -20,6 +21,17 @@ class ParasiteAxes(Axes):
         self.yaxis.set_ticks_position('right')
         self.set_frame_on(False)
 
+        self.set_transform(transform=transform, xcoord_type=xcoord_type, ycoord_type=ycoord_type)
+
+        self.xaxis.set_major_formatter(NullFormatter())
+        self.yaxis.set_major_formatter(NullFormatter())
+
+        fig.add_axes(self)
+
+    def set_transform(self, transform=IDENTITY, xcoord_type='scalar', ycoord_type='scalar'):
+
+        self.transform = transform
+
         self.major_loc_x = TransformLocator(coord='x', location='top', transform=transform, coord_type=xcoord_type)
         self.major_loc_y = TransformLocator(coord='y', location='right', transform=transform, coord_type=ycoord_type)
         self.xaxis.set_major_locator(self.major_loc_x)
@@ -27,8 +39,6 @@ class ParasiteAxes(Axes):
 
         self.xaxis.set_major_formatter(NullFormatter())
         self.yaxis.set_major_formatter(NullFormatter())
-
-        fig.add_axes(self)
 
     def draw(self, renderer):
 
@@ -40,17 +50,28 @@ class ParasiteAxes(Axes):
 
 class HostAxes(Axes):
 
-    def __init__(self, fig, rect, transform, xcoord_type='scalar', ycoord_type='scalar', parent=None):
+    def __init__(self, fig, rect, transform=IDENTITY, xcoord_type='scalar', ycoord_type='scalar', parent=None):
 
         self.fig = fig
         self.rect = rect
-        self.transform = transform
         self._parent = parent
 
         Axes.__init__(self, fig, rect)
 
         self.xaxis.set_ticks_position('bottom')
         self.yaxis.set_ticks_position('left')
+
+        fig.add_axes(self)
+
+        self.twin = ParasiteAxes(fig, rect, self)
+
+        self.other = {}
+
+        self.set_transform(transform=transform, xcoord_type=xcoord_type, ycoord_type=ycoord_type)
+
+    def set_transform(self, transform=IDENTITY, xcoord_type='scalar', ycoord_type='scalar'):
+
+        self.transform = transform
 
         self.major_loc_x = TransformLocator(coord='x', location='bottom', transform=transform, coord_type=xcoord_type)
         self.major_loc_y = TransformLocator(coord='y', location='left', transform=transform, coord_type=ycoord_type)
@@ -62,13 +83,7 @@ class HostAxes(Axes):
         self.xaxis.set_major_formatter(self.major_form_x)
         self.yaxis.set_major_formatter(self.major_form_y)
 
-        fig.add_axes(self)
-
-        self.twin = ParasiteAxes(fig, rect, self, transform,
-                                 xcoord_type=xcoord_type,
-                                 ycoord_type=ycoord_type)
-
-        self.other = {}
+        self.twin.set_transform(transform=transform, xcoord_type=xcoord_type, ycoord_type=ycoord_type)
 
     def add_system(self, name, extra_transform):
         self.other[name] = HostAxes(self.fig, self.rect, self.transform + extra_transform, parent=self)
@@ -90,4 +105,3 @@ class HostAxes(Axes):
             self.set_position(self._parent.get_position())
 
         Axes.draw(self, renderer)
-        
