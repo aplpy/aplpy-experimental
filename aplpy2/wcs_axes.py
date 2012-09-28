@@ -1,3 +1,5 @@
+from matplotlib.transforms import Affine2D
+
 from astropy.io import fits
 from astropy.wcs import WCS
 
@@ -6,7 +8,7 @@ from .transforms.wcs import WcsPixel2WorldTransform
 
 class WCSAxes(HostAxes):
 
-    def __init__(self, fig, rect, input):
+    def __init__(self, fig, rect, input=None):
 
         if isinstance(input, basestring) and input.lower().endswith('.fits'):
 
@@ -27,6 +29,14 @@ class WCSAxes(HostAxes):
 
             # Initalize axes
             HostAxes.__init__(self, fig, rect, wcs_trans, xcoord_type='longitude', ycoord_type='latitude')
+
+        elif input is None:
+
+            # Set up identity transformation
+            identity = Affine2D()
+
+            # Initalize axes
+            HostAxes.__init__(self, fig, rect, identity, xcoord_type='scalar', ycoord_type='scalar')
 
         else:
 
