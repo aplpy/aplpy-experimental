@@ -10,6 +10,12 @@ class WCSAxes(HostAxes):
 
     def __init__(self, fig, rect, input=None):
 
+        HostAxes.__init__(self, fig, rect)
+
+        self.set_input(input=input)
+
+    def set_input(self, input=None):
+
         if isinstance(input, basestring) and input.lower().endswith('.fits'):
 
             # Read in image
@@ -20,7 +26,7 @@ class WCSAxes(HostAxes):
             wcs_trans = WcsPixel2WorldTransform(wcs)
 
             # Initalize axes
-            HostAxes.__init__(self, fig, rect, wcs_trans, xcoord_type='longitude', ycoord_type='latitude')
+            self.set_transform(wcs_trans, xcoord_type='longitude', ycoord_type='latitude')
 
         elif isinstance(input, WCS):
 
@@ -28,7 +34,7 @@ class WCSAxes(HostAxes):
             wcs_trans = WcsPixel2WorldTransform(input)
 
             # Initalize axes
-            HostAxes.__init__(self, fig, rect, wcs_trans, xcoord_type='longitude', ycoord_type='latitude')
+            self.set_transform(wcs_trans, xcoord_type='longitude', ycoord_type='latitude')
 
         elif input is None:
 
@@ -36,7 +42,7 @@ class WCSAxes(HostAxes):
             identity = Affine2D()
 
             # Initalize axes
-            HostAxes.__init__(self, fig, rect, identity, xcoord_type='scalar', ycoord_type='scalar')
+            self.set_transform(identity, xcoord_type='scalar', ycoord_type='scalar')
 
         else:
 
