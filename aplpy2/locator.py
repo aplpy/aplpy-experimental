@@ -1,8 +1,18 @@
 import numpy as np
 
-from matplotlib.ticker import Locator
+from matplotlib.ticker import Locator as BaseLocator
 from matplotlib.transforms import Transform
 
+from . import math_util
+from . import angle as au
+from . import scalar as su
+
+# The following is necessary because Matplotlib classes used to be old-style
+if issubclass(BaseLocator, object):
+    Locator = BaseLocator
+else:
+    class Locator(BaseLocator, object):
+        pass
 
 class TransformLocator(Locator):
     """
@@ -28,13 +38,15 @@ class TransformLocator(Locator):
     """
 
     def __init__(self, coord=None, location=None, transform=None,
-                 spacing=None, coord_type='scalar'):
+                 spacing=None, coord_type='scalar', format=None, opposite=None):
 
         self.coord = coord
         self.location = location
         self.transform = transform
         self.spacing = spacing
         self.coord_type = coord_type
+        self.format = format
+        self.opposite = opposite
 
     def __call__(self):
 
@@ -65,7 +77,10 @@ class TransformLocator(Locator):
 
     @property
     def spacing(self):
-        return self._spacing
+        if self._spacing is None:
+            return default_spacing(self.axis.get_axes(), self.transform, self.location, self.coord, self.coord_type, self.format)
+        else:
+            return self._spacing
 
     @spacing.setter
     def spacing(self, value):
@@ -114,6 +129,74 @@ class TransformLocator(Locator):
             self._coord = value
         else:
             raise ValueError("coord should be either 'x' or 'y'")
+
+    @property
+    def format(self):
+        if self._format is None and self.opposite is not None:
+            return self.opposite.format
+        else:
+            return self._format
+
+    @format.setter
+    def format(self, value):
+        self._format = value
+
+
+def default_spacing(ax, transform, location, coord, coord_type, format):
+
+    # Get tick locations
+    _, _, wx, wy = axis_positions(ax, transform, location)
+
+    # Keep only pixels that fall inside the sky.
+    keep = ~np.isnan(wx) & ~np.isnan(wy)
+
+    if np.sum(keep) == 0:
+        return None
+    else:
+        wx, wy = wx[keep], wy[keep]
+
+    if coord == 'x':
+
+        if coord_type in ['longitude', 'latitude']:
+            if coord_type == 'longitude':
+                wxmin, wxmax = math_util.smart_range(wx)
+            else:
+                wxmin, wxmax = np.min(wx), np.max(wx)
+            if 'd.' in format:
+                spacing = au.smart_round_angle_decimal((wxmax - wxmin) / 5., latitude=coord_type == 'latitude')
+            else:
+                spacing = au.smart_round_angle_sexagesimal((wxmax - wxmin) / 5., latitude=coord_type == 'latitude', hours='hh' in format)
+        else:
+            wxmin, wxmax = np.min(wx), np.max(wx)
+            spacing = su.smart_round_angle_decimal((wxmax - wxmin) / 5.)
+    else:
+
+        if coord_type in ['longitude', 'latitude']:
+            if coord_type == 'longitude':
+                wymin, wymax = math_util.smart_range(wy)
+            else:
+                wymin, wymax = np.min(wy), np.max(wy)
+            if 'd.' in format:
+                spacing = au.smart_round_angle_decimal((wymax - wymin) / 5., latitude=coord_type == 'latitude')
+            else:
+                spacing = au.smart_round_angle_sexagesimal((wymax - wymin) / 5., latitude=coord_type == 'latitude', hours='hh' in format)
+        else:
+            wymin, wymax = np.min(wy), np.max(wy)
+            spacing = su.smart_round_angle_decimal((wymax - wymin) / 5.)
+
+    # Find minimum spacing allowed by labels
+    if coord_type in ['longitude', 'latitude']:
+        min_spacing = au._get_label_precision(format, latitude=coord_type == 'latitude')
+        if min_spacing.todegrees() > spacing.todegrees():
+            return min_spacing
+        else:
+            return spacing
+    else:
+        min_spacing = su._get_label_precision(format)
+        if min_spacing > spacing:
+            return min_spacing
+        else:
+            return spacing
 
 
 def tick_positions(ax, transform, location, coord, coord_type, spacing):

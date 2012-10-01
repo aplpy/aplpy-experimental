@@ -34,8 +34,11 @@ class ParasiteAxes(Axes):
 
         self.transform = transform
 
-        self.major_loc_x = TransformLocator(coord='x', location='top', transform=transform, coord_type=xcoord_type)
-        self.major_loc_y = TransformLocator(coord='y', location='right', transform=transform, coord_type=ycoord_type)
+        opposite_x = self._parent.major_loc_x if hasattr(self._parent, 'major_loc_x') else None
+        opposite_y = self._parent.major_loc_y if hasattr(self._parent, 'major_loc_y') else None
+
+        self.major_loc_x = TransformLocator(coord='x', location='top', transform=transform, coord_type=xcoord_type, opposite=opposite_x)
+        self.major_loc_y = TransformLocator(coord='y', location='right', transform=transform, coord_type=ycoord_type, opposite=opposite_y)
         self.xaxis.set_major_locator(self.major_loc_x)
         self.yaxis.set_major_locator(self.major_loc_y)
 

@@ -1,5 +1,13 @@
 import matplotlib as mpl
-from matplotlib.ticker import Formatter
+from matplotlib.ticker import Formatter as BaseFormatter
+
+
+# The following is necessary because Matplotlib classes used to be old-style
+if issubclass(BaseFormatter, object):
+    Formatter = BaseFormatter
+else:
+    class Formatter(BaseFormatter, object):
+        pass
 
 
 class TransformFormatter(Formatter):
@@ -27,6 +35,7 @@ class TransformFormatter(Formatter):
     @format.setter
     def format(self, value):
         self._format = value
+        self.locator.format = value
 
     @property
     def style(self):
